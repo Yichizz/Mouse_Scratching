@@ -22,7 +22,6 @@ if __name__ == '__main__':
                             label_smoothing=0.1, # label smoothing epsilon
                             dropout=0.3, # add dropout to the head
                             plots=True,
-                            augment=True, # turn on augmentation
                             degrees=15,
                             scale=0.5,
                             flipud=0.5)
