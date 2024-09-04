@@ -1,10 +1,11 @@
 # convert data forms from labelme to YOLOv8
 
 import os
-import json
+import sys
 import numpy as np
 import shutil
-from json_to_txt import json_to_txt
+from utils.json_to_txt import json_write_to_txt
+sys.path.append('.')
 
 def create_folders(data_dir):
     """
@@ -26,6 +27,21 @@ def create_folders(data_dir):
     os.makedirs(os.path.join(data_dir, 'labels/val'), exist_ok=True)
     return None
 
+def create_data_config_yaml(data_dir, num_classes, class_names):
+    """
+    Create data.yaml file for YOLOv8 training
+    Args:
+        data_dir (str): data directory path
+        num_classes (int): number of classes
+        class_names (list): list of class names
+    
+    Returns:
+        None
+    """
+    with open(os.path.join(data_dir, 'data.yaml'), 'w') as f:
+        f.write(f'nc: {num_classes}\n')
+        f.write('names: [' + ', '.join([f'"{name}"' for name in class_names]) + ' ]\n')
+
 def json_to_yolo(data_dir, json_dir, num_keypoints, verbose=False):
     """
     Convert json labels to txt labels for YOLOv8 training
@@ -44,23 +60,27 @@ def json_to_yolo(data_dir, json_dir, num_keypoints, verbose=False):
         video, index = json_file.split('.')[0].split('_')
         # for video A we use frames 0-4999 for training and 5000-5964 for validation
         # for video B we use frames 0-994 for training and 995-1650 for validation
+        split = 'unused'
         if video == 'A':
             if int(index) < 5000:
                 split = 'train'
-            else:
+            elif int(index) < 5965:
                 split = 'val'
         else:
             if int(index) < 995:
                 split = 'train'
-            else:
+            elif int(index) < 1651:
                 split = 'val'
-        txt_file = os.path.join(data_dir, f'labels/{split}', f'{video}_{index}.txt')
-        json_file = os.path.join(json_dir, json_file)
-        # convert json to txt and write to txt file
-        json_to_txt(json_file, txt_file, num_keypoints) 
-        # copy image file to images folder
-        image_file = os.path.join(json_dir, f'{video}_{index}.jpg')
-        shutil.copy(image_file, os.path.join(data_dir, f'images/{split}'))
-        if verbose:
-            print(f'{json_file} converted to {txt_file}, image copied to images/{split}')
+        if split == 'unused':
+            break
+        else:
+            txt_file = os.path.join(data_dir, f'labels/{split}', f'{video}_{index}.txt')
+            json_file = os.path.join(json_dir, json_file)
+            # convert json to txt and write to txt file
+            json_write_to_txt(json_file, txt_file, num_keypoints)
+            # copy image file to images folder
+            image_file = os.path.join(json_dir, f'{video}_{index}.jpg')
+            shutil.copy(image_file, os.path.join(data_dir, f'images/{split}'))
+            if verbose:
+                print(f'case {video}_{index} converted to YOLOv8 format in {split} folder')
     return None
