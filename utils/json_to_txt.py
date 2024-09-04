@@ -29,8 +29,8 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
     assert os.path.exists(json_file), 'json_file does not exist'
     assert num_keypoints in [4, 6], 'num_keypoints must be 4 or 6'
     data = json.load(open(json_file))
-    width = data['imageWidth']
-    height = data['imageHeight']
+    image_width = data['imageWidth']
+    image_height = data['imageHeight']
     if num_keypoints == 4:
         keypoint_list = [0, 3, 4, 5]
     elif num_keypoints == 6:
@@ -45,6 +45,11 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
                 w = np.array(obj['points'])[1][0] - x
                 h = np.array(obj['points'])[1][1] - y
                 x_center, y_center, width, height = coordinates2yolo(x, y, w, h)
+                # normalize the coordinates
+                x_center /= image_width
+                y_center /= image_height
+                width = np.abs(width) / image_width
+                height = np.abs(height) / image_height
                 # 6 digits after the decimal point
                 f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
                 break
@@ -52,8 +57,8 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
         for i in keypoint_list:
             for obj in data['shapes']:
                 if obj['label'] != 'mouse' and int(obj['label']) == i:
-                    x = obj['points'][0][0] / width
-                    y = obj['points'][0][1] / height
+                    x = obj['points'][0][0] / image_width
+                    y = obj['points'][0][1] / image_height
                     # in case of no group_id in the obj dictionary, we assume the keypoint is visible
                     if 'group_id' not in obj:
                         f.write(f'{x:.6f} {y:.6f} 2 ')

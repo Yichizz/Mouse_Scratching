@@ -2,6 +2,7 @@
 
 import os
 import sys
+import PIL
 import numpy as np
 import shutil
 from utils.json_to_txt import json_write_to_txt
