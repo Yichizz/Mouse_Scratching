@@ -1,5 +1,6 @@
-datasets
+data*
 *.ipynb
 *cache*
 weights
-frames
+frame
+runs
