@@ -6,13 +6,14 @@ def main():
     model = YOLO("yolov8n-pose.yaml").load('weights/yolov8n-pose.pt')
     # Tune hyperparameters on COCO8 for 30 epochs
     model.tune(data="dataset_reannotated/mouse-pose.yaml", 
-                epochs=50,
+                epochs=30, 
                 iterations=50, # number of tuning iterations
-                batch_size=-1, # auto-config based on GPU memory
+                batch=32, # auto-config based on GPU memory
                 optimizer="AdamW", 
                 freeze=[0,1,2,3,4,5,6,7,8,9],
                 label_smoothing=0.1,
-                cache=True, # store dataset in RAM for faster training
+                dropout=0.3,
+                cache=False,
                 amp=True, # automatic mixed precision for faster training
                 plots=False, 
                 save=False, 
