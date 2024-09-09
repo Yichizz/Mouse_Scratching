@@ -64,6 +64,9 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
                         f.write(f'{x:.6f} {y:.6f} 2 ')
                     elif obj['group_id'] == 1:
                         f.write(f'{x:.6f} {y:.6f} 1 ')
+                    elif obj['group_id'] == 0:
+                        # write 0.0 0.0 0 for keypoints that are not valid
+                        f.write(f'0.0 0.0 0 ')
                     else:
                         f.write(f'{x:.6f} {y:.6f} 2 ')
                     break

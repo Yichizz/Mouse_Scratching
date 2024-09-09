@@ -3,6 +3,7 @@
 import os
 import sys
 import PIL
+from tqdm import tqdm
 import numpy as np
 import shutil
 from utils.json_to_txt import json_write_to_txt
@@ -84,4 +85,43 @@ def json_to_yolo(data_dir, json_dir, num_keypoints, verbose=False):
             shutil.copy(image_file, os.path.join(data_dir, f'images/{split}'))
             if verbose:
                 print(f'case {video}_{index} converted to YOLOv8 format in {split} folder')
+    return None
+
+def json_to_yolo_random_split(data_dir, json_dir, num_keypoints, val_frac=0.2, verbose=False):
+    """
+    Convert json labels to txt labels for YOLOv8 training and randomly split into train and val
+    Args:
+        data_dir (str): data directory path
+        json_dir (str): json directory path
+        num_keypoints (int): number of keypoints (4 or 6)
+        val_frac (float): fraction of frame each video to be used for validation
+        verbose (bool): print conversion progress
+    
+    Returns:
+        None
+    """
+    assert num_keypoints in [4, 6], 'num_keypoints must be 4 or 6'
+    json_files = [f for f in os.listdir(json_dir) if f.endswith('.json')]
+    video_indexes= list(set([f.split('.')[0].split('_')[0] for f in json_files]))
+    print(f'videos found: {video_indexes}')
+
+    for video in tqdm(video_indexes):
+        np.random.seed(42)
+        video_files = [f for f in json_files if f.split('.')[0].split('_')[0] == video]
+        val_files = np.random.choice(video_files, int(len(video_files) * val_frac), replace=False)
+        print(f'video {video} has {len(video_files)} frames, {len(val_files)} frames used for validation')
+        train_files = [f for f in video_files if f not in val_files]
+        for split, files in zip(['train', 'val'], [train_files, val_files]):
+            for json_file in files:
+                index = json_file.split('.')[0].split('_')[1]
+                txt_file = os.path.join(data_dir, f'labels/{split}', f'{video}_{index}.txt')
+                json_file = os.path.join(json_dir, json_file)
+                # convert json to txt and write to txt file
+                json_write_to_txt(json_file, txt_file, num_keypoints)
+                # copy image file to images folder
+                image_file = os.path.join(json_dir, f'{video}_{index}.jpg')
+                shutil.copy(image_file, os.path.join(data_dir, f'images/{split}'))
+                if verbose:
+                    print(f'case {video}_{index} converted to YOLOv8 format in {split} folder')
+
     return None
