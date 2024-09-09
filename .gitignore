@@ -2,5 +2,5 @@ data*
 *.ipynb
 *cache*
 weights
-frame
+frame*
 runs
