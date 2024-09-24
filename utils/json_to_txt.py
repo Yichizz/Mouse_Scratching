@@ -31,29 +31,34 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
     data = json.load(open(json_file))
     image_width = data['imageWidth']
     image_height = data['imageHeight']
-    if num_keypoints == 4:
+    labels = [obj['label'] for obj in data['shapes']]
+    if num_keypoints == 4 and 'mouse' in labels:
         keypoint_list = [0, 3, 4, 5]
-    elif num_keypoints == 6:
+    elif num_keypoints == 4 and 'mouse' not in labels:
+        keypoint_list = [2, 6, 5, 7]
+    elif num_keypoints == 6 and 'mouse' in labels:
         keypoint_list = [0, 1, 2, 3, 4, 5]
+    elif num_keypoints == 6 and 'mouse' not in labels:
+        keypoint_list = [2, 4, 3, 6, 5, 7]
+    else:
+        raise ValueError('Invalid number of keypoints or data format')
     
     with open(txt_file, 'w') as f:
-        for obj in data['shapes']:
-            if obj['label'] == 'mouse':
-                # convert json coordinates to real coordinates
-                x = np.array(obj['points'])[0][0]
-                y = np.array(obj['points'])[0][1]
-                w = np.array(obj['points'])[1][0] - x
-                h = np.array(obj['points'])[1][1] - y
-                x_center, y_center, width, height = coordinates2yolo(x, y, w, h)
-                # normalize the coordinates
-                x_center /= image_width
-                y_center /= image_height
-                width = np.abs(width) / image_width
-                height = np.abs(height) / image_height
-                # 6 digits after the decimal point
-                f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
-                break
-            
+        if 'mouse' in labels:
+            index = labels.index('mouse')
+        else:
+            index = labels.index('1')
+        x = np.array(data['shapes'][index]['points'])[0][0]
+        y = np.array(data['shapes'][index]['points'])[0][1]
+        w = np.array(data['shapes'][index]['points'])[1][0] - x
+        h = np.array(data['shapes'][index]['points'])[1][1] - y
+        x_center, y_center, width, height = coordinates2yolo(x, y, w, h)
+        x_center /= image_width
+        y_center /= image_height
+        width = np.abs(width) / image_width
+        height = np.abs(height) / image_height
+        f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
+                
         for i in keypoint_list:
             for obj in data['shapes']:
                 if obj['label'] != 'mouse' and int(obj['label']) == i:

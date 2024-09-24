@@ -1,4 +1,4 @@
-# convert data forms from labelme to YOLOv8
+# convert data forms from labelme to YOLOv8 & vice versa
 
 import os
 import sys
@@ -105,22 +105,26 @@ def json_to_yolo_random_split(data_dir, json_dir, num_keypoints, val_frac=0.2, v
     video_indexes= list(set([f.split('.')[0].split('_')[0] for f in json_files]))
     print(f'videos found: {video_indexes}')
 
-    for video in tqdm(video_indexes):
+    for video in video_indexes:
         np.random.seed(42)
         video_files = [f for f in json_files if f.split('.')[0].split('_')[0] == video]
         val_files = np.random.choice(video_files, int(len(video_files) * val_frac), replace=False)
         print(f'video {video} has {len(video_files)} frames, {len(val_files)} frames used for validation')
         train_files = [f for f in video_files if f not in val_files]
         for split, files in zip(['train', 'val'], [train_files, val_files]):
-            for json_file in files:
+            for json_file in tqdm(files):
                 index = json_file.split('.')[0].split('_')[1]
                 txt_file = os.path.join(data_dir, f'labels/{split}', f'{video}_{index}.txt')
                 json_file = os.path.join(json_dir, json_file)
                 # convert json to txt and write to txt file
-                json_write_to_txt(json_file, txt_file, num_keypoints)
-                # copy image file to images folder
-                image_file = os.path.join(json_dir, f'{video}_{index}.jpg')
-                shutil.copy(image_file, os.path.join(data_dir, f'images/{split}'))
+                try:
+                    json_write_to_txt(json_file, txt_file, num_keypoints)
+                    # copy image file to images folder
+                    image_file = os.path.join(json_dir, f'{video}_{index}.jpg')
+                    shutil.copy(image_file, os.path.join(data_dir, f'images/{split}'))
+                except:
+                    print('error converting json to txt for file: ', json_file)
+
                 if verbose:
                     print(f'case {video}_{index} converted to YOLOv8 format in {split} folder')
 
