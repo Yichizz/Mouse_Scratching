@@ -48,16 +48,20 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
             index = labels.index('mouse')
         else:
             index = labels.index('1')
-        x = np.array(data['shapes'][index]['points'])[0][0]
-        y = np.array(data['shapes'][index]['points'])[0][1]
-        w = np.array(data['shapes'][index]['points'])[1][0] - x
-        h = np.array(data['shapes'][index]['points'])[1][1] - y
-        x_center, y_center, width, height = coordinates2yolo(x, y, w, h)
-        x_center /= image_width
-        y_center /= image_height
-        width = np.abs(width) / image_width
-        height = np.abs(height) / image_height
-        f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
+        
+        if data['shapes'][index]['group_id'] == 0:
+            f.write(f'0 {0:.6f} {0:.6f} {0:.6f} {0:.6f} ')
+        else:
+            x = np.array(data['shapes'][index]['points'])[0][0]
+            y = np.array(data['shapes'][index]['points'])[0][1]
+            w = np.array(data['shapes'][index]['points'])[1][0] - x
+            h = np.array(data['shapes'][index]['points'])[1][1] - y
+            x_center, y_center, width, height = coordinates2yolo(x, y, w, h)
+            x_center /= image_width
+            y_center /= image_height
+            width = np.abs(width) / image_width
+            height = np.abs(height) / image_height
+            f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
                 
         for i in keypoint_list:
             for obj in data['shapes']:
