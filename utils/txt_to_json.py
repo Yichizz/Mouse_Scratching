@@ -3,7 +3,13 @@
 import os
 import json
 import PIL
+import base64
 import numpy as np
+
+def tobase64(file_path):
+    with open(file_path, "rb") as image_file:
+        data = base64.b64encode(image_file.read())
+        return data.decode()
 
 def yolo2coordinates(x_center, y_center, width, height, image_width, image_height):
     top_left_x = (x_center - width / 2) * image_width
@@ -34,9 +40,9 @@ def txt_write_to_json(txt_file, json_file, image_file, num_keypoints=4):
     image_width, image_height = image.size
     top_left_x, top_left_y, bottom_right_x, bottom_right_y = yolo2coordinates(x_center, y_center, width, height, image_width, image_height)
     if num_keypoints == 4:
-        keypoint_list = [2, 6, 5, 7]
+        keypoint_list = [0,3,4,5]
     elif num_keypoints == 6:
-        keypoint_list = [2, 4, 3, 6, 5, 7]
+        keypoint_list = [0,1,2,3,4,5]
     else:
         raise ValueError('Invalid number of keypoints')
     
@@ -45,44 +51,36 @@ def txt_write_to_json(txt_file, json_file, image_file, num_keypoints=4):
     shapes.append({
         "label": "mouse",
         "points": [[top_left_x, top_left_y], [bottom_right_x, bottom_right_y]],
+        "group_id": None,
+        "description": "",
         "shape_type": "rectangle",
-        "flags": {}
+        "flags": {},
         "mask": None
     })
     for i in range(num_keypoints):
-        x, y, group = [float(x) for x in data[keypoint_list[i]:keypoint_list[i]+3]]
+        x, y, confidence = [float(x) for x in data[5+i*3:8+i*3]]
         x *= image_width
         y *= image_height
-        if group == 2:
+        if confidence > 0.5:
             # group_id id Null for normal keypoints
             shapes.append({
                 "label": f"{keypoint_list[i]}",
                 "points": [[x, y]],
                 "group_id": None,
-                "description": "",
+                "description": None,
                 "shape_type": "point",
-                "flags": {}
-                "mask": None
-            })
-        else:
-            shapes.append({
-                "label": f"{keypoint_list[i]}",
-                "points": [[x, y]],
-                "group_id": group,
-                "description": "",
-                "shape_type": "point",
-                "flags": {}
+                "flags": {},
                 "mask": None
             })
     # write json file
     with open(json_file, 'w') as f:
         json.dump({
-            "version": "5.5.0",
+            "version": "5.4.1",
             "flags": {},
             "shapes": shapes,
             "imagePath": os.path.basename(image_file),
-            "imageData": None,
+            "imageData": tobase64(image_file),
             "imageHeight": image_height,
             "imageWidth": image_width
-        }, f)
+        }, f, indent=4)
     return None
