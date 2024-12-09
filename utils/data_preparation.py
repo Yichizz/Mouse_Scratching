@@ -215,8 +215,9 @@ def check_data(frames_path, labels_path, training_videos, testing_videos):
     '''
     Check if: 1. all frames have corresponding labels 2. all labels have corresponding frames
     3. in the label json files, there are in total 6 non-repeated keypoints + 1 bounding box
-    4. if there is a group_id in the label json files, the group_id should be 0,1, or None
-    5. if there's a point (0,0) in the label json files, it should be an invalid point (i.e. group_id = 0)
+    4. if there is a group_id for the keypoint, the group_id should be 0,1, or None
+    5. if there is a group_id for the bounding box, the group_id should be 1,2, or None
+    6. if there's a point (0,0) in the label json files, it should be an invalid point (i.e. group_id = 0)
     '''
     print('Checking data...')
     for sub_dir in os.listdir(frames_path):
@@ -238,8 +239,10 @@ def check_data(frames_path, labels_path, training_videos, testing_videos):
                     data = json.load(f)
                     assert len(data['shapes']) == 7, f'json file {json_file} has {len(data["shapes"])} shapes'
                     for shape in data['shapes']:
-                        if 'group_id' in shape.keys():
-                            assert shape['group_id'] in [0, 1, None], f'group_id in json file {json_file} has {shape["group_id"]}'
+                        if 'group_id' in shape.keys() and shape["label"] != 'mouse':
+                            assert shape['group_id'] in [0, 1, None], f'group_id for keypoints in json file {json_file} has {shape["group_id"]}'
+                        if shape["label"] == 'mouse' and 'group_id' in shape.keys():
+                            assert shape['group_id'] in [1, 2, None], f'group_id for bbox in json file {json_file} has {shape["group_id"]}'
                         if shape['points'][0] == [0, 0]:
                             assert shape['group_id'] == 0, f'point (0,0) in json file {json_file} has group_id {shape["group_id"]}'
     print('Data check complete')

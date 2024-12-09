@@ -61,7 +61,15 @@ def json_write_to_txt(json_file, txt_file, num_keypoints):
             y_center /= image_height
             width = np.abs(width) / image_width
             height = np.abs(height) / image_height
-            f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
+            # change the first number to 0 for mouse class with group_id None
+            # change the first number to 1 for mouse class with group_id 1
+            # change the first number to 2 for mouse class with group_id 2
+            if data['shapes'][index]['group_id'] == 1:
+                f.write(f'1 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
+            elif data['shapes'][index]['group_id'] == 2:
+                f.write(f'2 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
+            else:
+                f.write(f'0 {x_center:.6f} {y_center:.6f} {width:.6f} {height:.6f} ')
                 
         for i in keypoint_list:
             for obj in data['shapes']:
