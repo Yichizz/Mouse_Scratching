@@ -35,23 +35,33 @@ def txt_write_to_json(txt_file, json_file, image_file, num_keypoints=4):
     assert num_keypoints in [4, 6], 'num_keypoints must be 4 or 6'
     with open(txt_file, 'r') as f:
         data = f.read().split()
-    x_center, y_center, width, height = [float(x) for x in data[1:5]]
-    image = PIL.Image.open(image_file)
-    image_width, image_height = image.size
-    top_left_x, top_left_y, bottom_right_x, bottom_right_y = yolo2coordinates(x_center, y_center, width, height, image_width, image_height)
-    if num_keypoints == 4:
-        keypoint_list = [0,3,4,5]
-    elif num_keypoints == 6:
-        keypoint_list = [0,1,2,3,4,5]
-    else:
-        raise ValueError('Invalid number of keypoints')
+        # check how many rows in the txt file
+        x_center, y_center, width, height = [float(x) for x in data[1:5]]
+        image = PIL.Image.open(image_file)
+        image_width, image_height = image.size
+        top_left_x, top_left_y, bottom_right_x, bottom_right_y = yolo2coordinates(x_center, y_center, width, height, image_width, image_height)
+        group_ids = [int(data[i]) for i in range(0, len(data), 5 + num_keypoints * 3)]
+        # group_id id none if only 0 in the group_ids, otherwise group_id is the group_ids
+        if len(group_ids) == 1 and group_ids[0] == 0:
+            group_ids = None
+        elif len(group_ids) == 1 and group_ids[0] != 0:
+            group_ids = group_ids[0]
+        else:
+            group_ids = group_ids
+
+        if num_keypoints == 4:
+            keypoint_list = [0,3,4,5]
+        elif num_keypoints == 6:
+            keypoint_list = [0,1,2,3,4,5]
+        else:
+            raise ValueError('Invalid number of keypoints')
     
     shapes = []
     # append mouse rectangle
     shapes.append({
         "label": "mouse",
         "points": [[top_left_x, top_left_y], [bottom_right_x, bottom_right_y]],
-        "group_id": None,
+        "group_id": group_ids,
         "description": "",
         "shape_type": "rectangle",
         "flags": {},
