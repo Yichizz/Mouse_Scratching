@@ -48,7 +48,7 @@ def txt_write_to_json(txt_file, json_file, image_file, num_keypoints=4):
             group_ids = group_ids[0]
         else:
             # we concatenate the group_ids to a string
-            group_ids = '_'.join([str(x) for x in group_ids])
+            group_ids = '/'.join([str(x) for x in group_ids])
 
         if num_keypoints == 4:
             keypoint_list = [0,3,4,5]

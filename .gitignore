@@ -4,3 +4,5 @@ data*
 weights
 frame*
 runs
+.codegpt
+*.csv
