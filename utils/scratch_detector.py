@@ -249,6 +249,11 @@ class ScratchDetector:
         # change the intensity metric to a more sophisticated one
         self.scratchings['intensity'][-2] += self.scratchings['intensity'][-1]
         self.scratchings['intensity'].pop()
+        # delete previous recording in the CSV file
+        with open(self.save_path, 'r') as f:
+            lines = f.readlines()
+        with open(self.save_path, 'w') as f:
+            f.writelines(lines[:-1])
         return None
 
     def process_video(self):
