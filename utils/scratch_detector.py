@@ -60,7 +60,8 @@ class ScratchDetector:
         self.i = 0
         self.initialize_csv()
         if self.plot_prediction:
-            self.initialize_plots()
+            # self.initialize_plots()
+            self.initialize_plots_together()
 
     def device_diagnosis(self, verbose=True):
         """ Detect the device (GPU or CPU) """
@@ -87,6 +88,29 @@ class ScratchDetector:
         self.ax2.set_title('Angle')
         self.xdata, self.right_angle_data, self.left_angle_data = [], [], []
 
+    def initialize_plots_together(self):
+        """ Initialize the 3 subplots for the video, the angle, and the table showing the results """
+        plt.ion()
+        self.fig = plt.figure(figsize=(21, 9))
+        self.ax1 = plt.subplot2grid((3, 7), (0, 0), rowspan=3, colspan=4)
+        self.ax2 = plt.subplot2grid((3, 7), (0, 4), rowspan=1, colspan=3)
+        self.ax3 = plt.subplot2grid((3, 7), (1, 4), rowspan=2, colspan=3)
+        self.ax1.axis('off')
+        self.ax2.xaxis.set_visible(False)
+        self.ax2.set_ylim(0, 90)
+        self.line_right, = self.ax2.plot([], [], label='angle_right', color='red')
+        self.line_left, = self.ax2.plot([], [], label='angle_left', color='blue')
+        self.ax2.legend()
+        self.xdata, self.right_angle_data, self.left_angle_data = [], [], []
+        self.ax3.axis('off')
+        self.blank_row = ['', '', '', '', '', '', '', '']
+        self.tabledata = [['id', 'start', 'end', 'duration', 'gap', 'side', 'times', 'intensity']]
+        #append 18 blank rows to the table
+        self.tabledata.extend([self.blank_row for _ in range(24)])
+        # table lines set to light grey
+        self.ax3.table(cellText=self.tabledata, cellLoc='center', loc='center', fontsize=16)
+
+        
     def smooth_data(self, data):
         """ Smooth data using Gaussian filter """
         return gaussian_filter(data, sigma=0.5)
@@ -122,6 +146,56 @@ class ScratchDetector:
         self.ax2.autoscale_view()
         self.fig2.canvas.draw()
         self.fig2.canvas.flush_events()
+
+    def plot_results_together(self, r, keypoints):
+        """ Plot the results (bounding boxes, keypoints, and angles) """
+        img = r.plot()
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        self.ax1.clear()
+        self.ax1.axis('off')
+        self.ax1.imshow(img)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+        # Compute angles and smooth the curves
+        right_angle = self.compute_angle(keypoints[0].reshape(1, 2), keypoints[5].reshape(1, 2), keypoints[3].reshape(1, 2))
+        left_angle = self.compute_angle(keypoints[0].reshape(1, 2), keypoints[5].reshape(1, 2), keypoints[4].reshape(1, 2))
+        self.xdata.append(self.i)
+        self.right_angle_data.append(right_angle)
+        self.left_angle_data.append(left_angle)
+
+        if self.i >= 50:
+            self.xdata = self.xdata[-50:]
+            self.right_angle_data = self.right_angle_data[-50:]
+            self.left_angle_data = self.left_angle_data[-50:]
+
+        right_angle_smoothed = self.smooth_data(self.right_angle_data)
+        left_angle_smoothed = self.smooth_data(self.left_angle_data)
+
+        self.line_right.set_data(self.xdata, right_angle_smoothed)
+        self.line_left.set_data(self.xdata, left_angle_smoothed)
+        self.ax2.relim()
+        self.ax2.autoscale_view()
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
+
+        if len(self.scratchings['end']) > 0 and len(self.scratchings['start']) == len(self.scratchings['end']):
+            self.ax3.clear()
+            self.ax3.axis('off')
+            self.tabledata = [['id', 'start', 'end', 'duration', 'gap', 'side', 'times', 'intensity']]
+            for i in range(len(self.scratchings['start'])):
+                start_min, start_sec, start_frame = self.frame_index2time(self.scratchings['start'][i])
+                end_min, end_sec, end_frame = self.frame_index2time(self.scratchings['end'][i])
+                duration_min, duration_sec, duration_frame = self.frame_index2time(self.scratchings['duration'][i])
+                gap_min, gap_sec, gap_frame = self.frame_index2time(self.scratchings['gaps'][i])
+                # add one more row to the table
+                self.tabledata.append([i + 1, f'{start_min}:{start_sec}:{start_frame}', f'{end_min}:{end_sec}:{end_frame}',
+                                       f'{duration_min}:{duration_sec}:{duration_frame}', f'{gap_min}:{gap_sec}:{gap_frame}',
+                                       self.scratchings['side'][i], self.scratchings['times'][i], self.scratchings['intensity'][i]])
+            self.tabledata.extend([self.blank_row for _ in range(24 - len(self.scratchings['start']))])
+            self.ax3.table(cellText=self.tabledata, cellLoc='center', loc='center',fontsize=12)
+        self.fig.canvas.draw()
+        self.fig.canvas.flush_events()
 
     def frame_index2time(self, frame_index):
         """ Convert frame index to time in minutes, seconds, and frames """
@@ -255,6 +329,11 @@ class ScratchDetector:
         with open(self.save_path, 'w') as f:
             f.writelines(lines[:-1])
         return None
+    
+    def process_frame(self, frame):
+        """ Process a single frame """
+        
+        return None
 
     def process_video(self):
         """ Main video processing loop """
@@ -291,7 +370,8 @@ class ScratchDetector:
                     class_highest_conf = 0
                     keypoints = points[classes == 0]
             if self.plot_prediction:
-                self.plot_results(r, keypoints)
+                #self.plot_results(r, keypoints)
+                self.plot_results_together(r, keypoints)
 
             self.detect_scratching(class_highest_conf, keypoints)
             self.i += 1
