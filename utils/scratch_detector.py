@@ -60,8 +60,8 @@ class ScratchDetector:
         self.i = 0
         self.initialize_csv()
         if self.plot_prediction:
-            # self.initialize_plots()
-            self.initialize_plots_together()
+            self.initialize_plots()
+            # self.initialize_plots_together()
 
     def device_diagnosis(self, verbose=True):
         """ Detect the device (GPU or CPU) """
@@ -234,6 +234,7 @@ class ScratchDetector:
 
     def evaluate_scratching(self):
         """ Evaluate a scratching event and calculate side, times, and intensity """
+        duration = len(self.keypoints_scratching)
         keypoints_array = np.array(self.keypoints_scratching)
         licking_index = np.where(np.array(self.behaviours_scratching) == 'paw_licking')[0]
         keypoints_scratching = np.array_split(keypoints_array, licking_index)
@@ -247,7 +248,7 @@ class ScratchDetector:
         # Calculate the angles for the side of scratching
         angles = [self.compute_angle(scratch[:, 0], scratch[:, 3], scratch[:, 1 if side[i] == 'right' else 2]) for i, scratch in enumerate(keypoints_scratching)]
         times = np.sum([self.count_local_minima(angle, threshold=45) for angle in angles])
-        intensity = times  #!!! modified to how to calculate the intensity here !!!
+        intensity = int(times/duration * 100)
 
         return side, times, intensity
     
@@ -332,7 +333,6 @@ class ScratchDetector:
     
     def process_frame(self, frame):
         """ Process a single frame """
-        
         return None
 
     def process_video(self):
@@ -358,6 +358,7 @@ class ScratchDetector:
             if self.high_conf_class:
                 class_highest_conf = int(classes[np.argmax(classes_conf)])
                 keypoints = points[np.argmax(classes_conf)]
+                # need to consider cases where there's a very low confidence point/invalid point
             else:
                 # class priority: scratching > paw_licking > other
                 if 1 in classes:
@@ -370,8 +371,8 @@ class ScratchDetector:
                     class_highest_conf = 0
                     keypoints = points[classes == 0]
             if self.plot_prediction:
-                #self.plot_results(r, keypoints)
-                self.plot_results_together(r, keypoints)
+                self.plot_results(r, keypoints)
+                # self.plot_results_together(r, keypoints)
 
             self.detect_scratching(class_highest_conf, keypoints)
             self.i += 1
