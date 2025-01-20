@@ -6,3 +6,4 @@ frame*
 runs
 .codegpt
 *.csv
+*.pt
