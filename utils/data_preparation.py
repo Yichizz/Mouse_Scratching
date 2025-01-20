@@ -242,7 +242,7 @@ def check_data(frames_path, labels_path, training_videos, testing_videos):
                         if 'group_id' in shape.keys() and shape["label"] != 'mouse':
                             assert shape['group_id'] in [0, 1, None], f'group_id for keypoints in json file {json_file} has {shape["group_id"]}'
                         if shape["label"] == 'mouse' and 'group_id' in shape.keys():
-                            assert shape['group_id'] in [1, 2, None], f'group_id for bbox in json file {json_file} has {shape["group_id"]}'
+                            assert shape['group_id'] in [0, 1, 2, None], f'group_id for bbox in json file {json_file} has {shape["group_id"]}'
                         if shape['points'][0] == [0, 0]:
                             assert shape['group_id'] == 0, f'point (0,0) in json file {json_file} has group_id {shape["group_id"]}'
     print('Data check complete')

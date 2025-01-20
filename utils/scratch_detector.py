@@ -339,7 +339,7 @@ class ScratchDetector:
         """ Main video processing loop """
         cap = cv2.VideoCapture(self.video_path)
         # self.num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) 
-        self.num_frames = 1800 # or set to the number of frames you want to process
+        self.num_frames = 60 # or set to the number of frames you want to process
         self.fps = cap.get(cv2.CAP_PROP_FPS)
         self.i = 0
 
