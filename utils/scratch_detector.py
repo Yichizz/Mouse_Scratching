@@ -60,8 +60,8 @@ class ScratchDetector:
         self.i = 0
         self.initialize_csv()
         if self.plot_prediction:
-            self.initialize_plots()
-            # self.initialize_plots_together()
+            # self.initialize_plots()
+            self.initialize_plots_together()
 
     def device_diagnosis(self, verbose=True):
         """ Detect the device (GPU or CPU) """
@@ -299,6 +299,7 @@ class ScratchDetector:
                 self.scratchings['end'].pop()
                 self.scratchings['duration'].pop()
                 self.scratchings['gaps'].pop()
+                
             self.keypoints_scratching = []
             self.behaviours_scratching = []
         else:
@@ -339,7 +340,7 @@ class ScratchDetector:
         """ Main video processing loop """
         cap = cv2.VideoCapture(self.video_path)
         # self.num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) 
-        self.num_frames = 60 # or set to the number of frames you want to process
+        self.num_frames = 1800 # or set to the number of frames you want to process
         self.fps = cap.get(cv2.CAP_PROP_FPS)
         self.i = 0
 
@@ -348,6 +349,7 @@ class ScratchDetector:
             if not ret:
                 break  # End of video
             # predict the keypoints and classes from the trained model
+            # convert to RGB format
             results = self.model(frame, device=self.device, verbose=False)
             r = results[0].cpu().numpy()
 
@@ -371,8 +373,8 @@ class ScratchDetector:
                     class_highest_conf = 0
                     keypoints = points[classes == 0]
             if self.plot_prediction:
-                self.plot_results(r, keypoints)
-                # self.plot_results_together(r, keypoints)
+                # self.plot_results(r, keypoints)
+                self.plot_results_together(r, keypoints)
 
             self.detect_scratching(class_highest_conf, keypoints)
             self.i += 1
