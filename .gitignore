@@ -7,3 +7,4 @@ runs
 .codegpt
 *.csv
 *.pt
+!data*/*.yaml
