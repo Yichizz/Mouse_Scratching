@@ -28,7 +28,7 @@ def main():
     pose_2cls = False # set to True if you want to convert the dataset to classification form
     if pose_2cls:
         # convert dataset in pose form to classfication form
-        pose2cls(data_dir = 'datasets/images', label_dir = 'datasets/labels', output_dir = 'datasets')
+        pose2cls(data_dir = 'datasets/images', label_dir = 'datasets/labels', output_dir = 'datasets/images')
         print('Conversion to classification form complete')
         
     pose_2detect = False # set to True if you want to convert the dataset to detection form
@@ -71,7 +71,7 @@ def main():
     
     training_cls = False # set to True if you want to train the model
     if training_cls:
-        pre_trained_model_path = 'weights/yolov11m-cls.pt' 
+        pre_trained_model_path = 'weights/yolo11m-cls.pt' 
         model = YOLO(pre_trained_model_path, task='cls')
         # Train the model, change hyperparameters if needed
         training_results = model.train(data="datasets/mouse-cls.yaml",
@@ -94,27 +94,26 @@ def main():
                                 amp=True)
         print('Training complete')
 
-    training_detect = False # set to True if you want to train the model
+    training_detect = True # set to True if you want to train the model
     if training_detect:
-        pre_trained_model_path = 'weights/yolov11m-detect.pt' 
+        pre_trained_model_path = 'weights/yolo11m.pt' 
         model = YOLO(pre_trained_model_path, task='detect')
         # Train the model, change hyperparameters if needed
         training_results = model.train(data="datasets/mouse-detect.yaml",
-                                epochs=500,
-                                patience=100, # early stopping patience
+                                epochs=200,
+                                patience=50, # early stopping patience
                                 batch=64,
                                 device=0,
                                 verbose=False,
-                                cos_lr=True, # cosine learning rate schedule
                                 lr0=1e-3, # initial learning rate
                                 lrf=1e-4, # small final learning rate for finer tuning
                                 freeze=[0,1,2,3,4,5,6,7,8,9,10], # freeze all the backbone layers (0-10) AND more (11-20) 
                                 label_smoothing=0.1, # label smoothing epsilon
                                 dropout=0.3, # add dropout to the head
-                                optimizer="AdamW", 
-                                save_period=50, # save the model every 50 epochs
+                                save_period=20, # save the model every 50 epochs
                                 hsv_h = 0.1, # image HSV-Hue augmentation (fraction)
                                 degrees = 20,
+                                cls = 2,
                                 save=True, # save the model after training
                                 amp=True)
         print('Training complete')
