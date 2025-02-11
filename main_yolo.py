@@ -33,7 +33,10 @@ def main():
         
     pose_2detect = False # set to True if you want to convert the dataset to detection form
     if pose_2detect:
-        pose2detect('datasets/labels')
+        pose2detect(label_dir = 'datasets/labels', 
+                    background_dir = 'D:/mouse/mouse_30fps/background/backgrounds', 
+                    image_dir = 'datasets/images', 
+                    val = 0.2)
         print('Converting the dataset to detection form')
 
     training_pose = False # set to True if you want to train the model
@@ -100,7 +103,7 @@ def main():
         model = YOLO(pre_trained_model_path, task='detect')
         # Train the model, change hyperparameters if needed
         training_results = model.train(data="datasets/mouse-detect.yaml",
-                                epochs=200,
+                                epochs=300,
                                 patience=50, # early stopping patience
                                 batch=64,
                                 device=0,
@@ -113,7 +116,7 @@ def main():
                                 save_period=20, # save the model every 50 epochs
                                 hsv_h = 0.1, # image HSV-Hue augmentation (fraction)
                                 degrees = 20,
-                                cls = 2,
+                                cls = 1,
                                 save=True, # save the model after training
                                 amp=True)
         print('Training complete')

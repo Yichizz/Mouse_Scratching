@@ -60,8 +60,8 @@ class ScratchDetector:
         self.i = 0
         self.initialize_csv()
         if self.plot_prediction:
-            # self.initialize_plots()
-            self.initialize_plots_together()
+            self.initialize_plots()
+            # self.initialize_plots_together()
 
     def device_diagnosis(self, verbose=True):
         """ Detect the device (GPU or CPU) """
@@ -276,9 +276,9 @@ class ScratchDetector:
         elif class_highest_conf == 0 and len(self.scratchings['start']) > len(self.scratchings['end']):
             self.scratchings['end'].append(self.i)
             self.scratchings['duration'][-1] += 1
+            side, times, intensity = self.evaluate_scratching()
             # validate the process is a scratching behaviour
-            if self.validate_scratching():
-                side, times, intensity = self.evaluate_scratching()
+            if self.validate_scratching() and times > 0:
                 self.scratchings['side'].append(side[0] if len(set(side)) == 1 else 'both')
                 self.scratchings['times'].append(times)
                 self.scratchings['intensity'].append(intensity)
@@ -339,8 +339,8 @@ class ScratchDetector:
     def process_video(self):
         """ Main video processing loop """
         cap = cv2.VideoCapture(self.video_path)
-        # self.num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) 
-        self.num_frames = 1800 # or set to the number of frames you want to process
+        self.num_frames = cap.get(cv2.CAP_PROP_FRAME_COUNT) 
+        # self.num_frames = 1800 # or set to the number of frames you want to process
         self.fps = cap.get(cv2.CAP_PROP_FPS)
         self.i = 0
 
@@ -350,7 +350,7 @@ class ScratchDetector:
                 break  # End of video
             # predict the keypoints and classes from the trained model
             # convert to RGB format
-            results = self.model(frame, device=self.device, verbose=False)
+            results = self.model(frame, device=self.device, verbose=False, conf = 0.2)
             r = results[0].cpu().numpy()
 
             # Clear GPU memory if using CUDA
@@ -365,16 +365,16 @@ class ScratchDetector:
                 # class priority: scratching > paw_licking > other
                 if 1 in classes:
                     class_highest_conf = 1
-                    keypoints = points[classes == 1]
+                    keypoints = points[np.where(classes == 1)[0][0]]
                 elif 2 in classes:
                     class_highest_conf = 2
-                    keypoints = points[classes == 2]
+                    keypoints = points[np.where(classes == 2)[0][0]]
                 else:
                     class_highest_conf = 0
-                    keypoints = points[classes == 0]
+                    keypoints = points[0]
             if self.plot_prediction:
-                # self.plot_results(r, keypoints)
-                self.plot_results_together(r, keypoints)
+                self.plot_results(r, keypoints)
+                # self.plot_results_together(r, keypoints)
 
             self.detect_scratching(class_highest_conf, keypoints)
             self.i += 1
