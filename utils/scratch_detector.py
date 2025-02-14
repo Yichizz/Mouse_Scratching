@@ -10,7 +10,7 @@ from ultralytics import YOLO
 class ScratchDetector:
     def __init__(self, video_path, pretrained_weights, save_path, plot_prediction=True, high_conf_class=True, device=None):
         """
-        ScratchDetector class to detect, time and count scratching behaviour in mice
+        ScratchDetector class to detect, time and count mouse scratching behaviour
         Args:
             video_path (str): path to the video file
             pretrained_weights (str): path to the pretrained weights file
@@ -323,7 +323,7 @@ class ScratchDetector:
         self.scratchings['times'][-2] += self.scratchings['times'][-1]
         self.scratchings['times'].pop()
         # change the intensity metric to a more sophisticated one
-        self.scratchings['intensity'][-2] += self.scratchings['intensity'][-1]
+        self.scratchings['intensity'][-2] = int((self.scratchings['times'][-1] / self.scratchings['duration'][-1]) * 100)
         self.scratchings['intensity'].pop()
         # delete previous recording in the CSV file
         with open(self.save_path, 'r') as f:
