@@ -347,7 +347,7 @@ class ScratchDetector:
                 else self.i
             )
             # if the gap is less than 0.1 seconds, merge the scratching events with the previous one
-            if gap < self.fps * 0.1:
+            if gap <= self.fps * 0.1:
                 print("interupted scratching")
                 self.is_continue = True
             else:
@@ -366,7 +366,7 @@ class ScratchDetector:
                 if len(self.scratchings["end"]) > 0
                 else self.i
             )
-            if gap < self.fps * 0.1:
+            if gap <= self.fps * 0.1:
                 print("interupted paw licking")
                 self.is_continue = True
                 self.scratchings["start"].append(self.i)
