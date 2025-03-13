@@ -1,5 +1,5 @@
 data*/**
-*.ipynb
+*.ipynb*
 *cache*
 weights
 frame*

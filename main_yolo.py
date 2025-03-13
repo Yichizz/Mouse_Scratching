@@ -60,7 +60,7 @@ def main():
         )
         print("Converting the dataset to detection form")
 
-    training_pose = True  # set to True if you want to train the model
+    training_pose = False  # set to True if you want to train the model
     if training_pose:
         # Load pre-trained model for fine-tuning/model testing
         pre_trained_model_path = "runs/pose/v11_large_well_trained/weights/best.pt"  # change the path to the model you want to fine-tune
@@ -191,10 +191,10 @@ def main():
         print("Training complete")
 
     # Test the model
-    testing_model = False  # set to True if you want to test the model
+    testing_model = True  # set to True if you want to test the model
     if testing_model:
         # Load pre-trained model for fine-tuning/model testing
-        pre_trained_model_path = "runs/pose/train2/weights/best.pt"  # change the path to the model you want to test
+        pre_trained_model_path = "runs/pose/v11_large_scratch_detect/weights/best.pt"  # change the path to the model you want to test
         model = YOLO(pre_trained_model_path)
         # validate on the test set and compute test performance metrics
         print("Testing the model")
